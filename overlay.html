@@ -11,10 +11,7 @@
   :root{
     --l:#e63950; --r:#2b7fff;
     --l-ink:#fff; --r-ink:#fff;
-    --panel:rgba(12,14,20,.90);
-    --panel-2:rgba(24,27,36,.92);
-    --line:rgba(255,255,255,.14);
-    --muted:rgba(255,255,255,.62);
+    --panel:rgba(12,14,20,.92);
   }
   html,body{margin:0;padding:0;background:transparent;overflow:hidden}
   body{
@@ -25,85 +22,76 @@
   .disp{font-family:"Dela Gothic One","M PLUS 1p","Yu Gothic UI","Meiryo",sans-serif;font-weight:400}
 
   .bar{
-    position:absolute;left:0;top:6px;width:800px;height:70px;
-    display:grid;grid-template-columns:190px 74px 1fr 74px 190px;
-    clip-path:polygon(22px 0,calc(100% - 22px) 0,100% 100%,0 100%);
-    filter:drop-shadow(0 3px 0 rgba(0,0,0,.35));
+    position:absolute;left:0;top:16px;width:800px;height:80px;
+    display:grid;grid-template-columns:1fr 66px 20px 66px 1fr;
+    clip-path:polygon(24px 0,calc(100% - 24px) 0,100% 100%,0 100%);
   }
-  .team{position:relative;display:flex;align-items:center;overflow:hidden;padding:0 14px}
-  .team.l{background:linear-gradient(100deg,color-mix(in srgb,var(--l) 78%,#000) 0%,var(--l) 70%);color:var(--l-ink);justify-content:flex-end;padding-left:34px}
-  .team.r{background:linear-gradient(260deg,color-mix(in srgb,var(--r) 78%,#000) 0%,var(--r) 70%);color:var(--r-ink);justify-content:flex-start;padding-right:34px}
-  .team::after{ /* 斜めのハイライト */
-    content:"";position:absolute;inset:0;
-    background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 2px,transparent 2px 10px);
-    pointer-events:none;
-  }
-  .tname{white-space:nowrap;font-size:26px;line-height:1;letter-spacing:.02em;position:relative;z-index:1;text-shadow:0 2px 0 rgba(0,0,0,.25)}
-  .team.l .tname{text-align:right}
 
-  .score{
-    background:var(--panel);display:grid;place-items:center;position:relative;
-    font-size:50px;line-height:1;letter-spacing:-.02em;
-    font-variant-numeric:tabular-nums;
+  /* 選手（主役） */
+  .player{position:relative;display:flex;flex-direction:column;justify-content:center;min-width:0;overflow:hidden}
+  .player.l{background:linear-gradient(90deg,color-mix(in srgb,var(--l) 70%,#000) 0%,var(--l) 100%);color:var(--l-ink);align-items:flex-end;padding:0 14px 0 32px}
+  .player.r{background:linear-gradient(270deg,color-mix(in srgb,var(--r) 70%,#000) 0%,var(--r) 100%);color:var(--r-ink);align-items:flex-start;padding:0 32px 0 14px}
+  .tname{
+    font-size:12px;font-weight:900;letter-spacing:.08em;line-height:1;opacity:.82;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-bottom:5px;
   }
-  .score.l{box-shadow:inset 4px 0 0 var(--l)}
-  .score.r{box-shadow:inset -4px 0 0 var(--r)}
+  .pname{
+    font-size:34px;font-weight:900;line-height:1.1;white-space:nowrap;max-width:100%;
+    text-shadow:0 2px 0 rgba(0,0,0,.28);
+  }
+  .player.l .pname{text-align:right}
+  .pname.none{opacity:.45}
+  .pname.wrap{
+    white-space:normal;line-height:1.15;word-break:break-all;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+    max-height:2.3em;
+  }
+  .player.flash::after{
+    content:"";position:absolute;inset:0;background:#fff;
+    animation:flash .6s ease-out forwards;pointer-events:none;
+  }
+  @keyframes flash{0%{opacity:.7}100%{opacity:0}}
+
+  /* スコア */
+  .score{
+    background:var(--panel);display:grid;place-items:center;
+    font-size:44px;line-height:1;font-variant-numeric:tabular-nums;
+  }
+  .score.l{box-shadow:inset 3px 0 0 var(--l)}
+  .score.r{box-shadow:inset -3px 0 0 var(--r)}
   .score span{display:inline-block;transform-origin:50% 60%}
   .score span.pop{animation:pop .7s cubic-bezier(.2,1.6,.4,1)}
   @keyframes pop{0%{transform:scale(1.7);filter:brightness(2.2)}100%{transform:scale(1);filter:none}}
-  .team.flash::before{
-    content:"";position:absolute;inset:0;background:#fff;z-index:2;
-    animation:flash .6s ease-out forwards;
-  }
-  @keyframes flash{0%{opacity:.75}100%{opacity:0}}
+  .dash{background:var(--panel);display:grid;place-items:center;color:rgba(255,255,255,.5);font-size:20px}
 
-  .center{
-    background:var(--panel-2);display:flex;flex-direction:column;justify-content:center;
-    align-items:center;min-width:0;padding:0 10px;border-left:1px solid var(--line);border-right:1px solid var(--line);
+  /* 任意の見出し（大将戦など）。空欄なら出さない */
+  .label{
+    position:absolute;left:50%;top:0;transform:translateX(-50%);
+    background:#fff;color:#111;font-size:12px;font-weight:900;letter-spacing:.1em;
+    padding:2px 12px;line-height:1.2;white-space:nowrap;display:none;
+    clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 100%,0 100%);
   }
-  .label{font-size:13px;font-weight:900;letter-spacing:.14em;color:var(--muted);white-space:nowrap;line-height:1;margin-bottom:6px}
-  .match{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;width:100%;gap:8px}
-  .pname{font-size:21px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
-  .pname.l{text-align:right;border-right:3px solid var(--l);padding-right:7px}
-  .pname.r{text-align:left;border-left:3px solid var(--r);padding-left:7px}
-  .vs{font-size:15px;color:var(--muted);line-height:1}
-  .title{font-size:22px;white-space:nowrap;overflow:hidden;line-height:1.1;max-width:100%}
-  .is-title .match{display:none}
-  .is-match .title{display:none}
+  .label.show{display:block}
 
-  .pips{
-    position:absolute;top:84px;left:0;width:800px;display:flex;justify-content:center;gap:5px;
-  }
-  .pip{
-    width:24px;height:10px;transform:skewX(-20deg);
-    background:rgba(12,14,20,.75);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.28);
-  }
-  .pip.w0{background:var(--l);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.25)}
-  .pip.w1{background:var(--r);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.25)}
-  .pip.now{box-shadow:inset 0 0 0 2px #fff;animation:blink 1.4s ease-in-out infinite}
-  @keyframes blink{50%{opacity:.45}}
-  .pips.hide{display:none}
-  .notice{position:absolute;inset:6px 0 auto 0;height:70px;display:none;place-items:center;background:rgba(12,14,20,.9);font-size:15px;font-weight:900;color:#ffd23f;text-align:center;padding:0 20px;box-sizing:border-box}
+  .notice{position:absolute;left:0;top:16px;width:800px;height:80px;display:none;place-items:center;background:rgba(12,14,20,.92);font-size:15px;font-weight:900;color:#ffd23f;text-align:center;padding:0 20px;box-sizing:border-box}
   .notice.show{display:grid}
 </style>
 </head>
 <body>
   <div class="bar">
-    <div class="team l" id="teamL"><div class="tname disp" id="nameL">チームA</div></div>
-    <div class="score l disp"><span id="scoreL">0</span></div>
-    <div class="center is-title" id="center">
-      <div class="label" id="label">第1試合</div>
-      <div class="match">
-        <div class="pname l" id="pL"></div>
-        <div class="vs disp">VS</div>
-        <div class="pname r" id="pR"></div>
-      </div>
-      <div class="title disp" id="title">サーバー対抗戦</div>
+    <div class="player l" id="plL">
+      <div class="tname" id="nameL">チームA</div>
+      <div class="pname" id="pL">―</div>
     </div>
+    <div class="score l disp"><span id="scoreL">0</span></div>
+    <div class="dash disp">-</div>
     <div class="score r disp"><span id="scoreR">0</span></div>
-    <div class="team r" id="teamR"><div class="tname disp" id="nameR">チームB</div></div>
+    <div class="player r" id="plR">
+      <div class="tname" id="nameR">チームB</div>
+      <div class="pname" id="pR">―</div>
+    </div>
   </div>
-  <div class="pips" id="pips"></div>
+  <div class="label" id="label"></div>
   <div class="notice" id="notice"></div>
 
 <script>
@@ -115,7 +103,7 @@
   const DB = !dbRaw ? '' : (dbRaw.includes('://') ? dbRaw : 'https://' + dbRaw);
 
   const defaults = () => ({
-    title: 'サーバー対抗戦', total: 14, showPips: true,
+    title: 'サーバー対抗戦',
     teams: [
       { name: 'チームA', color: '#e63950', score: 0, roster: [] },
       { name: 'チームB', color: '#2b7fff', score: 0, roster: [] }
@@ -155,20 +143,26 @@
     return (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) > .42 ? '#111' : '#fff';
   }
 
-  // はみ出す文字は自動で縮小
+  // はみ出す名前は自動で縮小。それでも入らなければ2行にする
   function fit(el, max, min) {
-    el.style.fontSize = max + 'px';
-    const box = el.parentElement;
+    const avail = el.parentElement.clientWidth - 46;
+    el.style.maxWidth = avail + 'px';
+    el.classList.remove('wrap');
     let size = max;
-    const avail = () => (el.classList.contains('tname') ? box.clientWidth - 48 : el.clientWidth);
-    while (size > min && el.scrollWidth > avail() + 0.5) { size -= 1; el.style.fontSize = size + 'px'; }
+    el.style.fontSize = size + 'px';
+    while (size > min && el.scrollWidth > avail) { size -= 1; el.style.fontSize = size + 'px'; }
+    if (el.scrollWidth <= avail) return;
+    el.classList.add('wrap');
+    size = 21;
+    el.style.fontSize = size + 'px';
+    while (size > 11 && el.scrollHeight > el.clientHeight + 1) { size -= 1; el.style.fontSize = size + 'px'; }
   }
 
   let cur = null;
-  function bump(scoreEl, teamEl) {
-    scoreEl.classList.remove('pop'); teamEl.classList.remove('flash');
+  function bump(scoreEl, playerEl) {
+    scoreEl.classList.remove('pop'); playerEl.classList.remove('flash');
     void scoreEl.offsetWidth;
-    scoreEl.classList.add('pop'); teamEl.classList.add('flash');
+    scoreEl.classList.add('pop'); playerEl.classList.add('flash');
   }
 
   function render(s) {
@@ -182,39 +176,23 @@
 
     $('nameL').textContent = s.teams[0].name || '';
     $('nameR').textContent = s.teams[1].name || '';
-    fit($('nameL'), 26, 12); fit($('nameR'), 26, 12);
 
     const sl = s.teams[0].score, sr = s.teams[1].score;
-    if (prev && sl > prev.teams[0].score) bump($('scoreL'), $('teamL'));
-    if (prev && sr > prev.teams[1].score) bump($('scoreR'), $('teamR'));
+    if (prev && sl > prev.teams[0].score) bump($('scoreL'), $('plL'));
+    if (prev && sr > prev.teams[1].score) bump($('scoreR'), $('plR'));
     $('scoreL').textContent = sl;
     $('scoreR').textContent = sr;
 
     const c = s.current;
-    const hasMatch = !!(c.left || c.right);
-    const center = $('center');
-    center.classList.toggle('is-match', hasMatch);
-    center.classList.toggle('is-title', !hasMatch);
-    $('label').textContent = c.label || ('第' + (s.history.length + 1) + '試合');
-    $('label').style.display = hasMatch || c.label ? '' : 'none';
-    $('pL').textContent = c.left || '―';
-    $('pR').textContent = c.right || '―';
-    $('title').textContent = s.title || '';
-    if (hasMatch) { fit($('pL'), 21, 10); fit($('pR'), 21, 10); }
-    else fit($('title'), 22, 11);
+    [['pL', c.left], ['pR', c.right]].forEach(([id, name]) => {
+      const el = $(id);
+      el.textContent = name || '―';
+      el.classList.toggle('none', !name);
+      fit(el, 34, 18);
+    });
 
-    const pips = $('pips');
-    pips.classList.toggle('hide', !s.showPips);
-    const total = Math.min(40, Math.max(+s.total || 0, s.history.length + (hasMatch ? 1 : 0)));
-    let html = '';
-    for (let i = 0; i < total; i++) {
-      const h = s.history[i];
-      let cls = 'pip';
-      if (h) cls += ' w' + h.winner;
-      else if (i === s.history.length && hasMatch) cls += ' now';
-      html += '<div class="' + cls + '"></div>';
-    }
-    pips.innerHTML = html;
+    $('label').textContent = c.label || '';
+    $('label').classList.toggle('show', !!c.label);
   }
 
   render(defaults());

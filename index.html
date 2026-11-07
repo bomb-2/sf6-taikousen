@@ -143,14 +143,14 @@
   </div>
 
   <div class="card">
-    <h2 id="curTitle">現在の対戦（第1試合）</h2>
+    <h2>現在の対戦</h2>
     <div class="vsrow">
       <input id="curL" list="dlL" placeholder="左の選手" autocomplete="off">
       <span class="vs">VS</span>
       <input id="curR" list="dlR" placeholder="右の選手" autocomplete="off">
     </div>
     <datalist id="dlL"></datalist><datalist id="dlR"></datalist>
-    <label class="f" for="curLabel">見出し（空欄なら「第N試合」）</label>
+    <label class="f" for="curLabel">見出し（大将戦など・空欄なら表示しない）</label>
     <input id="curLabel" placeholder="例：大将戦、代表決定戦">
     <div class="row">
       <button class="win l" id="winL">◀ <span id="winLName">チームA</span> 勝利</button>
@@ -160,7 +160,7 @@
       <button id="clearCur">対戦カードを消す</button>
       <button id="undo">1つ戻す</button>
     </div>
-    <div class="hint">勝利ボタンで +1点・結果を記録して次の試合へ進みます</div>
+    <div class="hint">勝利ボタンで +1点。勝った選手はそのまま残り、負けた選手は敗退（取り消し線）になります</div>
     <div class="roster">
       <h3><i style="background:var(--l)"></i><span id="rhL">チームA</span></h3>
       <div class="chips" id="chipsL"></div>
@@ -179,7 +179,7 @@
   <details id="settings">
     <summary>チーム・表示の設定</summary>
     <div class="inner">
-      <label class="f" for="title">大会名（対戦カードがない時に中央へ表示）</label>
+      <label class="f" for="title">大会名（結果コピー用）</label>
       <input id="title">
       <div class="grid2">
         <div><label class="f" for="nameL0">左チーム名</label><div class="colorrow"><input id="nameL0"><input type="color" id="colL"></div></div>
@@ -189,9 +189,6 @@
         <div><label class="f" for="rosL">左チームのメンバー（1行に1人）</label><textarea id="rosL"></textarea></div>
         <div><label class="f" for="rosR">右チームのメンバー（1行に1人）</label><textarea id="rosR"></textarea></div>
       </div>
-      <label class="f" for="total">試合数（下の勝敗マークの数）</label>
-      <input id="total" type="number" min="1" max="40">
-      <label class="check"><input type="checkbox" id="showPips"> 勝敗マークを表示する</label>
       <div class="row">
         <button id="swap">左右を入れ替え</button>
         <button id="resetScore" class="danger">スコアと結果をリセット</button>
@@ -213,7 +210,7 @@
 
   // ---------- 共通 ----------
   const defaults = () => ({
-    title: 'サーバー対抗戦', total: 14, showPips: true,
+    title: 'サーバー対抗戦',
     teams: [
       { name: 'チームA', color: '#e63950', score: 0, roster: [] },
       { name: 'チームB', color: '#2b7fff', score: 0, roster: [] }
@@ -423,21 +420,23 @@
     connect();
 
     const setVal = (el, v) => { if (document.activeElement !== el && el.value !== String(v)) el.value = v; };
-    const played = side => new Set(s.history.map(h => side === 0 ? h.left : h.right).filter(Boolean));
+    // 勝ち抜き戦：負けた選手だけ敗退扱い
+    const lost = side => new Set(s.history.filter(h => h.winner !== side).map(h => side === 0 ? h.left : h.right).filter(Boolean));
 
     function render() {
       const [A, B] = s.teams;
       document.documentElement.style.setProperty('--l', A.color);
       document.documentElement.style.setProperty('--r', B.color);
-      ['tnL', 'winLName', 'rhL'].forEach(id => $(id).textContent = A.name || '左チーム');
-      ['tnR', 'winRName', 'rhR'].forEach(id => $(id).textContent = B.name || '右チーム');
+      ['tnL', 'winLName'].forEach(id => $(id).textContent = A.name || '左チーム');
+      ['tnR', 'winRName'].forEach(id => $(id).textContent = B.name || '右チーム');
       $('scL').textContent = A.score; $('scR').textContent = B.score;
-      $('curTitle').textContent = '現在の対戦（第' + (s.history.length + 1) + '試合）';
       setVal($('curL'), s.current.left); setVal($('curR'), s.current.right); setVal($('curLabel'), s.current.label);
       $('winL').disabled = $('winR').disabled = !(s.current.left || s.current.right);
 
       [0, 1].forEach(side => {
-        const team = s.teams[side], done = played(side);
+        const team = s.teams[side], done = lost(side);
+        const left = team.roster.filter(n => !done.has(n)).length;
+        $(side === 0 ? 'rhL' : 'rhR').textContent = (team.name || (side ? '右チーム' : '左チーム')) + (team.roster.length ? '（残り ' + left + '人）' : '');
         const curName = side === 0 ? s.current.left : s.current.right;
         $(side === 0 ? 'chipsL' : 'chipsR').innerHTML = team.roster.length
           ? team.roster.map(n => {
@@ -461,8 +460,6 @@
       setVal($('nameL0'), A.name); setVal($('nameR0'), B.name);
       setVal($('colL'), A.color); setVal($('colR'), B.color);
       setVal($('rosL'), A.roster.join('\n')); setVal($('rosR'), B.roster.join('\n'));
-      setVal($('total'), s.total);
-      $('showPips').checked = !!s.showPips;
     }
 
     document.querySelectorAll('[data-adj]').forEach(b => b.addEventListener('click', () => {
@@ -488,14 +485,13 @@
     const roster = v => v.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
     bindText('rosL', v => s.teams[0].roster = roster(v));
     bindText('rosR', v => s.teams[1].roster = roster(v));
-    bindText('total', v => { const n = parseInt(v, 10); if (n > 0) s.total = Math.min(n, 40); });
-    $('showPips').addEventListener('change', e => { s.showPips = e.target.checked; commit(true); });
 
     function win(side) {
       if (!(s.current.left || s.current.right)) return;
       s.history.push({ left: s.current.left, right: s.current.right, label: s.current.label, winner: side });
       s.teams[side].score += 1;
-      s.current = { left: '', right: '', label: '' };
+      // 勝った選手は残し、負けた側だけ空ける
+      s.current = side === 0 ? { left: s.current.left, right: '', label: '' } : { left: '', right: s.current.right, label: '' };
       commit(true);
       toast((s.teams[side].name || (side ? '右' : '左') + 'チーム') + ' +1');
     }
