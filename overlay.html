@@ -129,6 +129,22 @@
     while (size > 10 && el.scrollHeight > el.clientHeight + 1) { size -= 1; el.style.fontSize = size + 'px'; }
   }
 
+  // フォントごとの上下の余白の偏りを測って、文字の見た目を枠の中央にそろえる
+  const ctx2d = document.createElement('canvas').getContext('2d');
+  function vcenter(el) {
+    el.style.top = '';
+    const text = (el.textContent || '').trim();
+    if (!text) return;
+    const cs = getComputedStyle(el);
+    ctx2d.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+    const m = ctx2d.measureText(text);
+    if (!m.fontBoundingBoxAscent && !m.fontBoundingBoxDescent) return;
+    const off = (m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 2
+              - (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+    el.style.position = 'relative';
+    el.style.top = (-off).toFixed(1) + 'px';
+  }
+
   let cur = null;
   function bump(scoreEl, playerEl) {
     scoreEl.classList.remove('pop'); playerEl.classList.remove('flash');
@@ -147,20 +163,21 @@
 
     $('nameL').textContent = s.teams[0].name || '';
     $('nameR').textContent = s.teams[1].name || '';
-    fit($('nameL')); fit($('nameR'));
+    fit($('nameL')); fit($('nameR')); vcenter($('nameL')); vcenter($('nameR'));
 
     const sl = s.teams[0].score, sr = s.teams[1].score;
     if (prev && sl > prev.teams[0].score) bump($('scoreL'), $('plL'));
     if (prev && sr > prev.teams[1].score) bump($('scoreR'), $('plR'));
     $('scoreL').textContent = sl;
     $('scoreR').textContent = sr;
+    vcenter($('scoreL')); vcenter($('scoreR'));
 
     const c = s.current;
     [['pL', c.left], ['pR', c.right]].forEach(([id, name]) => {
       const el = $(id);
       el.textContent = name || '―';
       el.classList.toggle('none', !name);
-      fit(el);
+      fit(el); vcenter(el);
     });
 
     $('label').textContent = c.label || '';
@@ -168,7 +185,11 @@
   }
 
   render(defaults());
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => cur && render(Object.assign({}, cur)));
+  if (document.fonts) {
+    const again = () => cur && render(Object.assign({}, cur));
+    if (document.fonts.ready) document.fonts.ready.then(again);
+    document.fonts.addEventListener && document.fonts.addEventListener('loadingdone', again);
+  }
 
   if (q.get('demo')) {
     const long = q.get('demo') === 'long';
