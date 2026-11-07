@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>対抗戦スコア 操作パネル</title>
+<style>
+  :root{
+    --bg:#16181f; --card:#1f222b; --card-2:#272b36; --line:#343a48;
+    --text:#eef0f5; --muted:#9aa1b2; --accent:#ffd23f; --ok:#4cd28a; --ng:#ff6b7f;
+    --l:#e63950; --r:#2b7fff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text)}
+  body{font:13px/1.5 "Yu Gothic UI","Yu Gothic","Meiryo","Hiragino Sans",sans-serif;padding:10px;min-width:260px;max-width:560px;margin:0 auto}
+  h1{font-size:15px;margin:4px 0 12px}
+  h2{font-size:11px;letter-spacing:.12em;color:var(--muted);margin:0 0 8px;font-weight:700}
+  p{margin:0 0 8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:10px}
+  button{font:inherit;color:var(--text);background:var(--card-2);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer}
+  button:hover{border-color:#566079}
+  button:active{transform:translateY(1px)}
+  button.primary{background:var(--accent);color:#111;border-color:var(--accent);font-weight:700;padding:9px 12px}
+  input,textarea{font:inherit;color:var(--text);background:#12141a;border:1px solid var(--line);border-radius:6px;padding:6px 8px;width:100%}
+  input:focus,textarea:focus{outline:2px solid #5b6b94;outline-offset:-1px}
+  textarea{resize:vertical;min-height:120px;line-height:1.5}
+  code{background:#12141a;border:1px solid var(--line);border-radius:4px;padding:1px 4px;font-size:12px}
+  .hidden{display:none!important}
+
+  .status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-bottom:8px}
+  .status i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+  .status.ok i{background:var(--ok)} .status.ng i{background:var(--ng)} .status.ng{color:var(--ng)}
+
+  .share label{display:block;font-size:11px;color:var(--muted);margin:6px 0 4px}
+  .copyrow{display:flex;gap:6px}
+  .copyrow input{font-size:11px;font-family:Consolas,monospace}
+  .copyrow button{flex:none}
+  .warn{color:#ffb35c;font-size:11px;margin-top:4px}
+
+  .scoreboard{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px}
+  .side{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+  .side .tn{font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-bottom:3px;border-bottom:3px solid}
+  .side.l .tn{border-color:var(--l)} .side.r .tn{border-color:var(--r)}
+  .num{display:flex;align-items:center;gap:6px}
+  .num b{font-size:34px;line-height:1;min-width:1.6em;text-align:center;font-variant-numeric:tabular-nums}
+  .num button{width:30px;height:30px;padding:0;font-size:16px;line-height:1}
+  .dash{font-size:22px;color:var(--muted)}
+
+  .vsrow{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center}
+  .vsrow .vs{color:var(--muted);font-weight:700;font-size:12px}
+  #curL{border-left:4px solid var(--l)} #curR{border-left:4px solid var(--r)}
+  .row{display:flex;gap:6px;margin-top:8px}
+  .row > *{flex:1}
+  .win{padding:10px 6px;font-weight:700;border:none;color:#fff}
+  .win.l{background:var(--l)} .win.r{background:var(--r)}
+  .win:disabled{opacity:.35;cursor:not-allowed}
+  .hint{color:var(--muted);font-size:11px;margin-top:6px}
+  label.f{display:block;font-size:11px;color:var(--muted);margin:8px 0 4px}
+
+  .roster h3{font-size:12px;margin:10px 0 6px;display:flex;align-items:center;gap:6px}
+  .roster h3 i{width:10px;height:10px;border-radius:2px;display:inline-block}
+  .chips{display:flex;flex-wrap:wrap;gap:5px}
+  .chip{padding:4px 8px;border-radius:999px;font-size:12px}
+  .chip.sel{background:var(--accent);color:#111;border-color:var(--accent);font-weight:700}
+  .chip.done{opacity:.4;text-decoration:line-through}
+  .empty{color:var(--muted);font-size:12px}
+
+  ol{margin:0;padding-left:22px}
+  ol li{padding:2px 0}
+  .wl{color:var(--l);font-weight:700} .wr{color:var(--r);font-weight:700}
+
+  details{background:var(--card);border:1px solid var(--line);border-radius:8px;margin-bottom:10px}
+  summary{padding:10px;cursor:pointer;font-weight:700;font-size:12px;color:var(--muted);letter-spacing:.08em}
+  details .inner{padding:0 10px 10px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .colorrow{display:flex;gap:6px;align-items:center}
+  .colorrow input[type=color]{width:40px;height:32px;padding:2px;flex:none}
+  .check{display:flex;gap:6px;align-items:center;margin-top:8px;font-size:12px}
+  .check input{width:auto}
+  .danger{border-color:#7a2f3a;color:#ff9aa8}
+  .toast{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:#000c;color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.show{opacity:1}
+  .err{color:var(--ng);font-size:12px;margin-top:6px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+
+<!-- ① 初回：データベースURLの登録 -->
+<section id="vSetup" class="hidden">
+  <h1>対抗戦スコア：はじめの設定</h1>
+  <div class="card">
+    <p>Firebase Realtime Database の URL を貼ってください。<br>（Firebaseの「Realtime Database」画面の上部に表示されているURLです）</p>
+    <input id="dbInput" placeholder="https://xxxx-default-rtdb.asia-southeast1.firebasedatabase.app">
+    <div class="row"><button class="primary" id="dbSave">保存して次へ</button></div>
+    <div class="err" id="dbErr"></div>
+  </div>
+</section>
+
+<!-- ② ルーム作成 -->
+<section id="vRoom" class="hidden">
+  <h1>対抗戦スコア</h1>
+  <div class="card">
+    <p>対抗戦ごとに「ルーム」を1つ作ります。作ると、参加者に配るURLが表示されます。</p>
+    <div class="row"><button class="primary" id="createRoom">新しいルームを作る</button></div>
+    <div class="err" id="roomErr"></div>
+  </div>
+  <div class="card" id="recentCard">
+    <h2>前に作ったルーム</h2>
+    <div id="recent"></div>
+  </div>
+  <div class="row"><button id="changeDb">データベースURLを変更</button></div>
+</section>
+
+<!-- ③ 操作パネル -->
+<section id="vPanel" class="hidden">
+  <div class="status" id="status"><i></i><span>接続中…</span></div>
+
+  <details class="share" id="shareBox">
+    <summary>配布用URL・共有</summary>
+    <div class="inner">
+      <label>参加者に配るURL（OBSのブラウザソースに貼る／幅800・高さ112）</label>
+      <div class="copyrow"><input id="viewUrl" readonly><button data-copy="viewUrl">コピー</button></div>
+      <label>操作用URL（スコア係を交代・追加するとき用）</label>
+      <div class="copyrow"><input id="editUrl" readonly><button data-copy="editUrl">コピー</button></div>
+      <div class="warn">操作用URLを知っている人は点数を変えられます。スコア係以外には渡さないでください。</div>
+      <div class="row"><button id="leave">ルーム一覧に戻る</button></div>
+    </div>
+  </details>
+
+  <div class="card">
+    <h2>スコア</h2>
+    <div class="scoreboard">
+      <div class="side l">
+        <div class="tn" id="tnL">チームA</div>
+        <div class="num"><button data-adj="0,-1">−</button><b id="scL">0</b><button data-adj="0,1">＋</button></div>
+      </div>
+      <div class="dash">-</div>
+      <div class="side r">
+        <div class="tn" id="tnR">チームB</div>
+        <div class="num"><button data-adj="1,-1">−</button><b id="scR">0</b><button data-adj="1,1">＋</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 id="curTitle">現在の対戦（第1試合）</h2>
+    <div class="vsrow">
+      <input id="curL" list="dlL" placeholder="左の選手" autocomplete="off">
+      <span class="vs">VS</span>
+      <input id="curR" list="dlR" placeholder="右の選手" autocomplete="off">
+    </div>
+    <datalist id="dlL"></datalist><datalist id="dlR"></datalist>
+    <label class="f" for="curLabel">見出し（空欄なら「第N試合」）</label>
+    <input id="curLabel" placeholder="例：大将戦、代表決定戦">
+    <div class="row">
+      <button class="win l" id="winL">◀ <span id="winLName">チームA</span> 勝利</button>
+      <button class="win r" id="winR"><span id="winRName">チームB</span> 勝利 ▶</button>
+    </div>
+    <div class="row">
+      <button id="clearCur">対戦カードを消す</button>
+      <button id="undo">1つ戻す</button>
+    </div>
+    <div class="hint">勝利ボタンで +1点・結果を記録して次の試合へ進みます</div>
+    <div class="roster">
+      <h3><i style="background:var(--l)"></i><span id="rhL">チームA</span></h3>
+      <div class="chips" id="chipsL"></div>
+      <h3><i style="background:var(--r)"></i><span id="rhR">チームB</span></h3>
+      <div class="chips" id="chipsR"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>試合結果</h2>
+    <ol id="hist"></ol>
+    <div class="empty" id="histEmpty">まだ試合結果はありません</div>
+    <div class="row"><button id="copyResult">結果をテキストでコピー</button></div>
+  </div>
+
+  <details id="settings">
+    <summary>チーム・表示の設定</summary>
+    <div class="inner">
+      <label class="f" for="title">大会名（対戦カードがない時に中央へ表示）</label>
+      <input id="title">
+      <div class="grid2">
+        <div><label class="f" for="nameL0">左チーム名</label><div class="colorrow"><input id="nameL0"><input type="color" id="colL"></div></div>
+        <div><label class="f" for="nameR0">右チーム名</label><div class="colorrow"><input id="nameR0"><input type="color" id="colR"></div></div>
+      </div>
+      <div class="grid2">
+        <div><label class="f" for="rosL">左チームのメンバー（1行に1人）</label><textarea id="rosL"></textarea></div>
+        <div><label class="f" for="rosR">右チームのメンバー（1行に1人）</label><textarea id="rosR"></textarea></div>
+      </div>
+      <label class="f" for="total">試合数（下の勝敗マークの数）</label>
+      <input id="total" type="number" min="1" max="40">
+      <label class="check"><input type="checkbox" id="showPips"> 勝敗マークを表示する</label>
+      <div class="row">
+        <button id="swap">左右を入れ替え</button>
+        <button id="resetScore" class="danger">スコアと結果をリセット</button>
+      </div>
+    </div>
+  </details>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const LS_DB = 'sf6vs:db', LS_ROOMS = 'sf6vs:rooms';
+  const ls = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  // ---------- 共通 ----------
+  const defaults = () => ({
+    title: 'サーバー対抗戦', total: 14, showPips: true,
+    teams: [
+      { name: 'チームA', color: '#e63950', score: 0, roster: [] },
+      { name: 'チームB', color: '#2b7fff', score: 0, roster: [] }
+    ],
+    current: { left: '', right: '', label: '' },
+    history: []
+  });
+  const arr = v => Array.isArray(v) ? v.filter(x => x != null) : (v && typeof v === 'object' ? Object.keys(v).sort((a, b) => a - b).map(k => v[k]).filter(x => x != null) : []);
+  function normalize(raw) {
+    const d = defaults();
+    if (!raw || typeof raw !== 'object') return d;
+    const teams = arr(raw.teams);
+    const s = Object.assign(d, raw);
+    s.teams = [0, 1].map(i => Object.assign({}, d.teams[i], teams[i] || {}));
+    s.teams.forEach(t => { t.roster = arr(t.roster); t.score = +t.score || 0; });
+    s.history = arr(raw.history);
+    s.current = Object.assign({ left: '', right: '', label: '' }, raw.current || {});
+    return s;
+  }
+  const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 1600);
+  }
+  function rand(n) {
+    const a = 'abcdefghijkmnpqrstuvwxyz23456789';
+    const b = new Uint8Array(n); crypto.getRandomValues(b);
+    return Array.from(b, x => a[x % a.length]).join('');
+  }
+  function normDb(v) {
+    v = (v || '').trim().replace(/\/+$/, '');
+    if (!v) return '';
+    if (!v.includes('://')) v = 'https://' + v;
+    return v;
+  }
+  function copyText(text) {
+    const done = () => toast('コピーしました');
+    const fallback = () => {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('コピーできませんでした'); }
+      ta.remove();
+    };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback);
+    else fallback();
+  }
+  async function api(method, path, body) {
+    const res = await fetch(DB + path + '.json', {
+      method, body: body === undefined ? undefined : JSON.stringify(body)
+    });
+    if (!res.ok) {
+      let msg = res.status + '';
+      try { const j = await res.json(); if (j && j.error) msg += ' ' + j.error; } catch (e) {}
+      throw new Error(msg);
+    }
+    return res.json();
+  }
+  const explain = e => /401|403|Permission/i.test(e.message)
+    ? '権限エラーです。Firebaseのルール（README参照）が貼られているか確認してください。\n(' + e.message + ')'
+    : /404/.test(e.message) ? 'データベースが見つかりません。URLを確認してください。\n(' + e.message + ')'
+    : '接続できませんでした。URLとネット接続を確認してください。\n(' + e.message + ')';
+
+  // ---------- 画面の振り分け ----------
+  const hash = new URLSearchParams(location.hash.slice(1));
+  let DB = normDb(hash.get('db')) || normDb(ls.get(LS_DB));
+  if (hash.get('db')) ls.set(LS_DB, DB);
+  const ROOM = (hash.get('r') || '').replace(/[^a-z0-9]/gi, '');
+  const KEY = hash.get('k') || '';
+
+  function show(id) { ['vSetup', 'vRoom', 'vPanel'].forEach(v => $(v).classList.toggle('hidden', v !== id)); }
+
+  if (!DB) setupView();
+  else if (ROOM && KEY) panelView();
+  else roomView();
+
+  window.addEventListener('hashchange', () => location.reload());
+
+  // ① データベースURL登録
+  function setupView() {
+    show('vSetup');
+    $('dbInput').value = ls.get(LS_DB) || '';
+    $('dbSave').onclick = async () => {
+      const v = normDb($('dbInput').value);
+      $('dbErr').textContent = '';
+      if (!/^https?:\/\/[^/]+$/.test(v)) { $('dbErr').textContent = 'URLの形式が正しくありません'; return; }
+      DB = v;
+      $('dbSave').disabled = true;
+      try {
+        // データベースが存在するかだけ確認する（読み取り拒否は正常）
+        await fetch(DB + '/.json?shallow=true').then(r => { if (r.status === 404) throw new Error('404'); });
+        ls.set(LS_DB, DB);
+        roomView();
+      } catch (e) { $('dbErr').textContent = explain(e); }
+      $('dbSave').disabled = false;
+    };
+  }
+
+  // ② ルーム作成・一覧
+  function rooms() { try { return JSON.parse(ls.get(LS_ROOMS)) || []; } catch (e) { return []; } }
+  function roomView() {
+    show('vRoom');
+    const list = rooms().filter(r => r.db === DB);
+    $('recentCard').classList.toggle('hidden', !list.length);
+    $('recent').innerHTML = list.map(r =>
+      '<div class="row"><button data-open="' + esc(r.r) + '|' + esc(r.k) + '">' + esc(r.name || r.r) +
+      ' <span style="color:var(--muted);font-size:11px">' + esc(new Date(r.t).toLocaleDateString()) + '</span></button></div>').join('');
+    $('recent').onclick = e => {
+      const b = e.target.closest('[data-open]'); if (!b) return;
+      const [r, k] = b.dataset.open.split('|');
+      location.hash = new URLSearchParams({ db: DB, r, k }).toString();
+    };
+    $('changeDb').onclick = () => setupView();
+    $('createRoom').onclick = async () => {
+      $('roomErr').textContent = '';
+      $('createRoom').disabled = true;
+      const r = rand(8), k = rand(20);
+      try {
+        await api('PUT', '/keys/' + r, k);
+        await api('PUT', '/rooms/' + r, { k, state: defaults() });
+        const all = rooms(); all.unshift({ db: DB, r, k, t: Date.now(), name: '' });
+        ls.set(LS_ROOMS, JSON.stringify(all.slice(0, 20)));
+        location.hash = new URLSearchParams({ db: DB, r, k }).toString();
+      } catch (e) { $('roomErr').textContent = explain(e); }
+      $('createRoom').disabled = false;
+    };
+  }
+
+  // ③ 操作パネル
+  function panelView() {
+    show('vPanel');
+    const base = location.href.split('#')[0].replace(/[^/]*$/, '');
+    $('viewUrl').value = base + 'overlay.html?' + new URLSearchParams({ db: DB.replace(/^https:\/\//, ''), room: ROOM }).toString();
+    $('editUrl').value = location.href;
+    document.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copyText($(b.dataset.copy).value));
+    $('leave').onclick = () => { location.hash = ''; };
+
+    let s = defaults();
+    let loaded = false, lastEdit = 0, saveTimer = null, saving = false, pendingAgain = false;
+
+    function status(kind, text) {
+      const el = $('status'); el.className = 'status ' + (kind || ''); el.querySelector('span').textContent = text;
+    }
+
+    async function save() {
+      clearTimeout(saveTimer); saveTimer = null;
+      if (saving) { pendingAgain = true; return; }
+      saving = true;
+      status('', '保存中…');
+      try {
+        await api('PUT', '/rooms/' + ROOM, { k: KEY, state: s });
+        status('ok', '反映済み');
+        // ルーム一覧の表示名を大会名で更新
+        const all = rooms(); const me = all.find(x => x.r === ROOM && x.db === DB);
+        if (me && me.name !== s.title) { me.name = s.title; ls.set(LS_ROOMS, JSON.stringify(all)); }
+      } catch (e) {
+        status('ng', /401|403|Permission/i.test(e.message) ? '保存できません（操作用URLが正しいか確認）' : '保存に失敗（再試行中）');
+        if (!/401|403|Permission/i.test(e.message)) setTimeout(save, 2000);
+      }
+      saving = false;
+      if (pendingAgain) { pendingAgain = false; save(); }
+    }
+    function commit(now) {
+      if (!loaded) { toast('接続中です。少し待ってください'); render(); return; }
+      lastEdit = Date.now();
+      render();
+      clearTimeout(saveTimer);
+      if (now) save(); else { status('', '入力中…'); saveTimer = setTimeout(save, 350); }
+    }
+
+    // 受信（他のスコア係の操作も反映）
+    let raw = null;
+    function setAt(obj, path, val) {
+      const parts = path.split('/').filter(Boolean);
+      if (!parts.length) return val;
+      const out = (obj && typeof obj === 'object') ? JSON.parse(JSON.stringify(obj)) : {};
+      let o = out;
+      for (let i = 0; i < parts.length - 1; i++) { const p = parts[i]; if (!o[p] || typeof o[p] !== 'object') o[p] = {}; o = o[p]; }
+      const last = parts[parts.length - 1];
+      if (val === null) delete o[last]; else o[last] = val;
+      return out;
+    }
+    let deferT = null;
+    function incoming() {
+      // 自分が入力中・保存待ちのときは少し待ってから反映する
+      clearTimeout(deferT);
+      if (saveTimer || saving || Date.now() - lastEdit < 1500) { deferT = setTimeout(incoming, 700); return; }
+      s = normalize(raw); render();
+    }
+    function connect() {
+      const es = new EventSource(DB + '/rooms/' + ROOM + '/state.json');
+      es.addEventListener('put', e => {
+        const m = JSON.parse(e.data); raw = setAt(raw, m.path, m.data);
+        if (!loaded) { loaded = true; s = normalize(raw); render(); status('ok', '接続済み'); return; }
+        incoming();
+      });
+      es.addEventListener('patch', e => {
+        const m = JSON.parse(e.data);
+        Object.keys(m.data || {}).forEach(k => { raw = setAt(raw, m.path.replace(/\/$/, '') + '/' + k, m.data[k]); });
+        incoming();
+      });
+      es.addEventListener('cancel', () => status('ng', '読み込みが拒否されました（ルール設定を確認）'));
+      es.onerror = () => {
+        if (es.readyState === EventSource.CLOSED) { status('ng', '接続が切れました（再接続中）'); setTimeout(connect, 3000); }
+        else if (loaded) status('', '再接続中…');
+      };
+      es.onopen = () => { if (loaded) status('ok', '接続済み'); };
+    }
+    connect();
+
+    const setVal = (el, v) => { if (document.activeElement !== el && el.value !== String(v)) el.value = v; };
+    const played = side => new Set(s.history.map(h => side === 0 ? h.left : h.right).filter(Boolean));
+
+    function render() {
+      const [A, B] = s.teams;
+      document.documentElement.style.setProperty('--l', A.color);
+      document.documentElement.style.setProperty('--r', B.color);
+      ['tnL', 'winLName', 'rhL'].forEach(id => $(id).textContent = A.name || '左チーム');
+      ['tnR', 'winRName', 'rhR'].forEach(id => $(id).textContent = B.name || '右チーム');
+      $('scL').textContent = A.score; $('scR').textContent = B.score;
+      $('curTitle').textContent = '現在の対戦（第' + (s.history.length + 1) + '試合）';
+      setVal($('curL'), s.current.left); setVal($('curR'), s.current.right); setVal($('curLabel'), s.current.label);
+      $('winL').disabled = $('winR').disabled = !(s.current.left || s.current.right);
+
+      [0, 1].forEach(side => {
+        const team = s.teams[side], done = played(side);
+        const curName = side === 0 ? s.current.left : s.current.right;
+        $(side === 0 ? 'chipsL' : 'chipsR').innerHTML = team.roster.length
+          ? team.roster.map(n => {
+              const cls = ['chip']; if (n === curName) cls.push('sel'); else if (done.has(n)) cls.push('done');
+              return '<button class="' + cls.join(' ') + '" data-side="' + side + '" data-name="' + esc(n) + '">' + esc(n) + '</button>';
+            }).join('')
+          : '<span class="empty">「チーム・表示の設定」でメンバーを登録すると、ここから選べます</span>';
+        $(side === 0 ? 'dlL' : 'dlR').innerHTML = team.roster.map(n => '<option value="' + esc(n) + '">').join('');
+      });
+
+      $('hist').innerHTML = s.history.map(h => {
+        const lw = h.winner === 0;
+        return '<li>' + (h.label ? '<span style="color:var(--muted)">[' + esc(h.label) + ']</span> ' : '') +
+          '<span class="' + (lw ? 'wl' : '') + '">' + (lw ? '○' : '●') + '</span> ' + esc(h.left || '―') +
+          ' <span style="color:var(--muted)">vs</span> ' + esc(h.right || '―') +
+          ' <span class="' + (lw ? '' : 'wr') + '">' + (lw ? '●' : '○') + '</span></li>';
+      }).join('');
+      $('histEmpty').style.display = s.history.length ? 'none' : '';
+
+      setVal($('title'), s.title);
+      setVal($('nameL0'), A.name); setVal($('nameR0'), B.name);
+      setVal($('colL'), A.color); setVal($('colR'), B.color);
+      setVal($('rosL'), A.roster.join('\n')); setVal($('rosR'), B.roster.join('\n'));
+      setVal($('total'), s.total);
+      $('showPips').checked = !!s.showPips;
+    }
+
+    document.querySelectorAll('[data-adj]').forEach(b => b.addEventListener('click', () => {
+      const [i, d] = b.dataset.adj.split(',').map(Number);
+      s.teams[i].score = Math.max(0, s.teams[i].score + d);
+      commit(true);
+    }));
+    $('vPanel').addEventListener('click', e => {
+      const c = e.target.closest('.chip'); if (!c) return;
+      const k = +c.dataset.side === 0 ? 'left' : 'right', name = c.dataset.name;
+      s.current[k] = s.current[k] === name ? '' : name;
+      commit(true);
+    });
+    const bindText = (id, fn) => $(id).addEventListener('input', e => { fn(e.target.value); commit(false); });
+    bindText('curL', v => s.current.left = v.trim());
+    bindText('curR', v => s.current.right = v.trim());
+    bindText('curLabel', v => s.current.label = v.trim());
+    bindText('title', v => s.title = v);
+    bindText('nameL0', v => s.teams[0].name = v);
+    bindText('nameR0', v => s.teams[1].name = v);
+    bindText('colL', v => s.teams[0].color = v);
+    bindText('colR', v => s.teams[1].color = v);
+    const roster = v => v.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+    bindText('rosL', v => s.teams[0].roster = roster(v));
+    bindText('rosR', v => s.teams[1].roster = roster(v));
+    bindText('total', v => { const n = parseInt(v, 10); if (n > 0) s.total = Math.min(n, 40); });
+    $('showPips').addEventListener('change', e => { s.showPips = e.target.checked; commit(true); });
+
+    function win(side) {
+      if (!(s.current.left || s.current.right)) return;
+      s.history.push({ left: s.current.left, right: s.current.right, label: s.current.label, winner: side });
+      s.teams[side].score += 1;
+      s.current = { left: '', right: '', label: '' };
+      commit(true);
+      toast((s.teams[side].name || (side ? '右' : '左') + 'チーム') + ' +1');
+    }
+    $('winL').onclick = () => win(0);
+    $('winR').onclick = () => win(1);
+    $('undo').onclick = () => {
+      const h = s.history.pop();
+      if (!h) { toast('戻せる結果がありません'); return; }
+      s.teams[h.winner].score = Math.max(0, s.teams[h.winner].score - 1);
+      s.current = { left: h.left || '', right: h.right || '', label: h.label || '' };
+      commit(true); toast('1つ戻しました');
+    };
+    $('clearCur').onclick = () => { s.current = { left: '', right: '', label: '' }; commit(true); };
+    $('swap').onclick = () => {
+      s.teams.reverse();
+      s.history = s.history.map(h => ({ left: h.right || '', right: h.left || '', label: h.label || '', winner: 1 - h.winner }));
+      s.current = { left: s.current.right, right: s.current.left, label: s.current.label };
+      commit(true); toast('左右を入れ替えました');
+    };
+    $('resetScore').onclick = () => {
+      if (!confirm('スコアと試合結果をすべて消します。チーム名とメンバーは残ります。よろしいですか？')) return;
+      s.teams.forEach(t => t.score = 0); s.history = []; s.current = { left: '', right: '', label: '' };
+      commit(true);
+    };
+    $('copyResult').onclick = () => {
+      const [A, B] = s.teams;
+      const lines = ['【' + (s.title || '対抗戦') + ' 結果】', A.name + ' ' + A.score + ' - ' + B.score + ' ' + B.name, ''];
+      s.history.forEach((h, i) => {
+        const lw = h.winner === 0;
+        lines.push((i + 1) + '. ' + (h.label ? '[' + h.label + '] ' : '') + (lw ? '○' : '●') + h.left + ' vs ' + h.right + (lw ? '●' : '○'));
+      });
+      copyText(lines.join('\n'));
+    };
+
+    render();
+  }
+})();
+</script>
+</body>
+</html>
