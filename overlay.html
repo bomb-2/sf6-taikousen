@@ -7,89 +7,57 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+1p:wght@800;900&display=swap" rel="stylesheet">
 <style>
-  /* OBSブラウザソース：幅 800 / 高さ 112 */
-  :root{
-    --l:#e63950; --r:#2b7fff;
-    --l-ink:#fff; --r-ink:#fff;
-    --panel:rgba(12,14,20,.92);
-  }
+  :root{--l:#e63950;--r:#2b7fff;--l-ink:#fff;--r-ink:#fff;--panel:rgba(12,14,20,.92);--panel-2:rgba(22,25,34,.92)}
   html,body{margin:0;padding:0;background:transparent;overflow:hidden}
-  body{
-    width:800px;height:112px;position:relative;
-    font-family:"M PLUS 1p","Yu Gothic UI","Yu Gothic","Meiryo",sans-serif;
-    color:#fff;-webkit-font-smoothing:antialiased;
-  }
+  body{position:relative;font-family:"M PLUS 1p","Yu Gothic UI","Yu Gothic","Meiryo",sans-serif;color:#fff;-webkit-font-smoothing:antialiased}
   .disp{font-family:"Dela Gothic One","M PLUS 1p","Yu Gothic UI","Meiryo",sans-serif;font-weight:400}
-
-  .bar{
-    position:absolute;left:0;top:16px;width:800px;height:80px;
-    display:grid;grid-template-columns:1fr 66px 20px 66px 1fr;
-    clip-path:polygon(24px 0,calc(100% - 24px) 0,100% 100%,0 100%);
-  }
-
-  /* 選手（主役） */
-  .player{position:relative;display:flex;flex-direction:column;justify-content:center;min-width:0;overflow:hidden}
-  .player.l{background:linear-gradient(90deg,color-mix(in srgb,var(--l) 70%,#000) 0%,var(--l) 100%);color:var(--l-ink);align-items:flex-end;padding:0 14px 0 32px}
-  .player.r{background:linear-gradient(270deg,color-mix(in srgb,var(--r) 70%,#000) 0%,var(--r) 100%);color:var(--r-ink);align-items:flex-start;padding:0 32px 0 14px}
-  .tname{
-    font-size:12px;font-weight:900;letter-spacing:.08em;line-height:1;opacity:.82;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-bottom:5px;
-  }
-  .pname{
-    font-size:34px;font-weight:900;line-height:1.1;white-space:nowrap;max-width:100%;
-    text-shadow:0 2px 0 rgba(0,0,0,.28);
-  }
-  .player.l .pname{text-align:right}
+  .fit{white-space:nowrap;line-height:1.1}
+  .fit.clip{overflow:hidden;text-overflow:ellipsis}
+  .fit.wrap{white-space:normal;line-height:1.15;word-break:break-all;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;max-height:2.3em}
+  .pname{font-weight:900;text-shadow:0 2px 0 rgba(0,0,0,.28)}
   .pname.none{opacity:.45}
-  .pname.wrap{
-    white-space:normal;line-height:1.15;word-break:break-all;
-    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
-    max-height:2.3em;
-  }
-  .player.flash::after{
-    content:"";position:absolute;inset:0;background:#fff;
-    animation:flash .6s ease-out forwards;pointer-events:none;
-  }
-  @keyframes flash{0%{opacity:.7}100%{opacity:0}}
-
-  /* スコア */
-  .score{
-    background:var(--panel);display:grid;place-items:center;
-    font-size:44px;line-height:1;font-variant-numeric:tabular-nums;
-  }
-  .score.l{box-shadow:inset 3px 0 0 var(--l)}
-  .score.r{box-shadow:inset -3px 0 0 var(--r)}
+  .score{display:grid;place-items:center;line-height:1;font-variant-numeric:tabular-nums;background:var(--panel)}
   .score span{display:inline-block;transform-origin:50% 60%}
   .score span.pop{animation:pop .7s cubic-bezier(.2,1.6,.4,1)}
   @keyframes pop{0%{transform:scale(1.7);filter:brightness(2.2)}100%{transform:scale(1);filter:none}}
-  .dash{background:var(--panel);display:grid;place-items:center;color:rgba(255,255,255,.5);font-size:20px}
-
-  /* 任意の見出し（大将戦など）。空欄なら出さない */
-  .label{
-    position:absolute;left:50%;top:0;transform:translateX(-50%);
-    background:#fff;color:#111;font-size:12px;font-weight:900;letter-spacing:.1em;
-    padding:2px 12px;line-height:1.2;white-space:nowrap;display:none;
-    clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 100%,0 100%);
-  }
+  .flash{position:relative}
+  .flash::after{content:"";position:absolute;inset:0;background:#fff;animation:flash .6s ease-out forwards;pointer-events:none}
+  @keyframes flash{0%{opacity:.7}100%{opacity:0}}
+  .label{position:absolute;left:50%;top:0;transform:translateX(-50%);background:#fff;color:#111;font-size:13px;font-weight:900;letter-spacing:.1em;padding:2px 14px;line-height:1.2;white-space:nowrap;display:none;clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 100%,0 100%);z-index:3}
   .label.show{display:block}
-
-  .notice{position:absolute;left:0;top:16px;width:800px;height:80px;display:none;place-items:center;background:rgba(12,14,20,.92);font-size:15px;font-weight:900;color:#ffd23f;text-align:center;padding:0 20px;box-sizing:border-box}
+  .notice{position:absolute;inset:0;display:none;place-items:center;background:rgba(12,14,20,.92);font-size:15px;font-weight:900;color:#ffd23f;text-align:center;padding:0 20px;box-sizing:border-box;z-index:5}
   .notice.show{display:grid}
+  /* C案「チーム名タブ」：OBSブラウザソース 幅 800 / 高さ 124 */
+  body{width:800px;height:124px}
+  .tabs{position:absolute;left:0;top:14px;width:800px;height:34px;display:flex;justify-content:space-between;padding:0 24px;box-sizing:border-box;pointer-events:none}
+  .tab{width:296px;height:34px;display:flex;align-items:center;background:var(--panel);padding:0 16px;box-sizing:border-box;min-width:0}
+  .tab.l{justify-content:flex-end;clip-path:polygon(14px 0,100% 0,100% 100%,0 100%);box-shadow:inset 0 -3px 0 var(--l)}
+  .tab.r{justify-content:flex-start;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 100%,0 100%);box-shadow:inset 0 -3px 0 var(--r)}
+  .tab.l .tname{text-align:right}
+  .tname{letter-spacing:.04em}
+  .bar{position:absolute;left:0;top:48px;width:800px;height:74px;display:grid;
+    grid-template-columns:1fr 70px 20px 70px 1fr;
+    clip-path:polygon(0 0,100% 0,calc(100% - 24px) 100%,24px 100%)}
+  .player{display:flex;align-items:center;min-width:0}
+  .player.l{background:linear-gradient(90deg,color-mix(in srgb,var(--l) 70%,#000),var(--l));color:var(--l-ink);justify-content:flex-end;padding:0 14px 0 36px}
+  .player.r{background:linear-gradient(270deg,color-mix(in srgb,var(--r) 70%,#000),var(--r));color:var(--r-ink);justify-content:flex-start;padding:0 36px 0 14px}
+  .player.l .pname{text-align:right}
+  .score{font-size:46px}
+  .dash{background:var(--panel);display:grid;place-items:center;color:rgba(255,255,255,.5);font-size:20px}
+  .label{top:14px;height:auto}
 </style>
 </head>
 <body>
+  <div class="tabs">
+    <div class="tab l"><div class="tname fit disp" id="nameL" data-max="21" data-min="12">チームA</div></div>
+    <div class="tab r"><div class="tname fit disp" id="nameR" data-max="21" data-min="12">チームB</div></div>
+  </div>
   <div class="bar">
-    <div class="player l" id="plL">
-      <div class="tname" id="nameL">チームA</div>
-      <div class="pname" id="pL">―</div>
-    </div>
+    <div class="player l" id="plL"><div class="pname fit" id="pL" data-max="34" data-min="18" data-wrap="21">―</div></div>
     <div class="score l disp"><span id="scoreL">0</span></div>
     <div class="dash disp">-</div>
     <div class="score r disp"><span id="scoreR">0</span></div>
-    <div class="player r" id="plR">
-      <div class="tname" id="nameR">チームB</div>
-      <div class="pname" id="pR">―</div>
-    </div>
+    <div class="player r" id="plR"><div class="pname fit" id="pR" data-max="34" data-min="18" data-wrap="21">―</div></div>
   </div>
   <div class="label" id="label"></div>
   <div class="notice" id="notice"></div>
@@ -143,19 +111,22 @@
     return (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) > .42 ? '#111' : '#fff';
   }
 
-  // はみ出す名前は自動で縮小。それでも入らなければ2行にする
-  function fit(el, max, min) {
-    const avail = el.parentElement.clientWidth - 46;
+  // はみ出す文字は自動で縮小。選手名は入らなければ2行に
+  function fit(el) {
+    const max = +el.dataset.max || 30, min = +el.dataset.min || 14, wrapMax = +el.dataset.wrap || 0;
+    const p = el.parentElement, cs = getComputedStyle(p);
+    const avail = p.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
     el.style.maxWidth = avail + 'px';
-    el.classList.remove('wrap');
+    el.classList.remove('wrap', 'clip');
     let size = max;
     el.style.fontSize = size + 'px';
     while (size > min && el.scrollWidth > avail) { size -= 1; el.style.fontSize = size + 'px'; }
     if (el.scrollWidth <= avail) return;
+    if (!wrapMax) { el.classList.add('clip'); return; }
     el.classList.add('wrap');
-    size = 21;
+    size = wrapMax;
     el.style.fontSize = size + 'px';
-    while (size > 11 && el.scrollHeight > el.clientHeight + 1) { size -= 1; el.style.fontSize = size + 'px'; }
+    while (size > 10 && el.scrollHeight > el.clientHeight + 1) { size -= 1; el.style.fontSize = size + 'px'; }
   }
 
   let cur = null;
@@ -176,6 +147,7 @@
 
     $('nameL').textContent = s.teams[0].name || '';
     $('nameR').textContent = s.teams[1].name || '';
+    fit($('nameL')); fit($('nameR'));
 
     const sl = s.teams[0].score, sr = s.teams[1].score;
     if (prev && sl > prev.teams[0].score) bump($('scoreL'), $('plL'));
@@ -188,7 +160,7 @@
       const el = $(id);
       el.textContent = name || '―';
       el.classList.toggle('none', !name);
-      fit(el, 34, 18);
+      fit(el);
     });
 
     $('label').textContent = c.label || '';
@@ -197,6 +169,16 @@
 
   render(defaults());
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => cur && render(Object.assign({}, cur)));
+
+  if (q.get('demo')) {
+    const long = q.get('demo') === 'long';
+    render(normalize({
+      title: 'サーバー対抗戦',
+      teams: [{ name: q.get('tl') || 'ダルシム部', color: '#e63950', score: 3 }, { name: q.get('tr') || '希構', color: '#2b7fff', score: 2 }],
+      current: long ? { left: 'DIO_Brando99', right: 'とてもとても長い名前のプレイヤーさん＠所属サーバー', label: '大将戦' } : { left: 'かやの', right: 'まりゅめろ', label: '' }
+    }));
+    return;
+  }
 
   if (!DB || !room) { notice('URLが正しくありません。主催から配られたURLをそのまま貼ってください'); return; }
 
